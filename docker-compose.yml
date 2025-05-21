@@ -33,6 +33,8 @@ services:
       - net
     depends_on:
       - chroma_client
+    environment:
+      - PYTHONUNBUFFERED=1
 
 volumes:
   index_data:
