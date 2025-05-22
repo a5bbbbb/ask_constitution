@@ -2,8 +2,89 @@
 """
 Pipeline module for the RAG system.
 """
+import os
 from ollama_client.llm import query_ollama
-from chroma.chroma import query_chromadb
+from chroma.chroma import query_constitution_documents 
+import requests
+import json
+
+
+
+
+def fetch_docs():
+    try:
+        response = requests.get("http://host.docker.internal:6660/embeddings")
+        response.raise_for_status()
+        
+        api_data = response.json()
+        retrieved_ids = api_data.get("ids", [])
+        
+        if not retrieved_ids:
+            print("No document IDs retrieved from API")
+            return []
+        
+        print(f"Retrieved IDs from API: {retrieved_ids}")
+        
+        json_file = "constitution_docs.json"
+        if not os.path.exists(json_file):
+            print(f"Document file {json_file} not found. Skipping initialization.")
+            return []
+        
+        print(f"Opening {json_file}")
+        with open(json_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        
+        documents = data["documents"]
+        metadatas = data["metadatas"]
+        ids = data["ids"]
+        
+        filtered_docs = []
+        for i, doc_id in enumerate(ids):
+            if doc_id in retrieved_ids:
+                doc_info = {
+                    "id": doc_id,
+                    "document": documents[i],
+                    "metadata": metadatas[i] if i < len(metadatas) else None
+                }
+                filtered_docs.append(doc_info)
+        
+        print(f"Found {len(filtered_docs)} matching documents out of {len(retrieved_ids)} requested IDs")
+        return filtered_docs
+        
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching from API: {e}")
+        return []
+    except Exception as e:
+        print(f"Error loading documents: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+
+# def fetch_docs():
+#     #["1","2"]
+#     response = requests.get("http://host.docker.internal:6660/embeddings")
+#
+#     json_file = "constitution_docs.json"
+#     if not os.path.exists(json_file):
+#         print(f"Document file {json_file} not found. Skipping initialization.")
+#         return
+#     
+#     print(f"Opening {json_file}")
+#     try:
+#         with open(json_file, "r", encoding="utf-8") as f:
+#             data = json.load(f)
+#         
+#         documents = data["documents"]
+#         metadatas = data["metadatas"]
+#         ids = data["ids"]
+#
+#
+#     except Exception as e:
+#         print(f"Error loading documents: {e}")
+#         import traceback
+#         traceback.print_exc()
+#
 
 
 
@@ -24,9 +105,14 @@ def rag_pipeline(query_text, chat_history=None):
     try:
         print("Query: " + query_text)
         
-        retrieved_docs, metadata = query_chromadb(query_text)
-        constitution_context = " ".join(retrieved_docs[0]) if retrieved_docs else "No relevant documents found."
+        # retrieved_docs, metadata = query_chromadb(query_text)
+        # constitution_context = " ".join(retrieved_docs[0]) if retrieved_docs else "No relevant documents found."
         
+
+        retrieved_docs = query_constitution_documents(query_text, n_results=5)
+        constitution_context = " ".join(retrieved_docs) if retrieved_docs else "No relevant documents found."
+
+
         print("Constitution Context: " + constitution_context[:200] + "..." if len(constitution_context) > 200 else constitution_context)
         
         chat_context = ""
