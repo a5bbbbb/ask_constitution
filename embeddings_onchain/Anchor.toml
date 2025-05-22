@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-embeddings_onchain = "AibtK9NXNCfDpZsgPqMgdCeFFXRTL2ixM6x6GFNidJxH"
+embeddings_onchain = "A1g3ToDasaBD2Xc11rhALercNtNeaWmTS1VxCqhQ6Daa"
 
 [registry]
 url = "https://api.apr.dev"

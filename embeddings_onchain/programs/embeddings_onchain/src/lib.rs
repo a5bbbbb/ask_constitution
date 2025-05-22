@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 // This is your program's public key and it will update
 // automatically when you build the project.
-declare_id!("AibtK9NXNCfDpZsgPqMgdCeFFXRTL2ixM6x6GFNidJxH"); // REPLACE WITH YOUR PROGRAM ID
+declare_id!("A1g3ToDasaBD2Xc11rhALercNtNeaWmTS1VxCqhQ6Daa"); // REPLACE WITH YOUR PROGRAM ID
 
 pub const EMBEDDING_DIMENSION: usize = 32; // Significantly reduced for on-chain search feasibility
 pub const MAX_URI_LENGTH: usize = 64; // Adjusted for smaller accounts
@@ -64,15 +64,15 @@ pub mod embeddings_onchain { // Ensure this matches your project name in Anchor.
         // Iterating through the provided accounts
         // We need to work with the data directly from AccountInfo to avoid lifetime issues
         for account_info in ctx.remaining_accounts.iter() {
+            // Check if the account is owned by the program and deserialize it
+            if account_info.owner != ctx.program_id {
+                msg!("Skipping account {:?}: not owned by program", account_info.key());
+                continue;
+            }
 
             // FIX: Directly deserialize into Embedding struct
             // This copies the data and avoids the lifetime dependency on `account_info` itself.
             let embedding_account: Embedding = Embedding::try_deserialize(&mut &account_info.data.borrow()[..])?;
-            // Check if the account is owned by the program and deserialize it
-            if embedding_account.owner != *ctx.program_id {
-                msg!("Skipping account {:?}: not owned by program", account_info.key());
-                continue;
-            }
 
             // Calculate cosine similarity
             let similarity = calculate_cosine_similarity(

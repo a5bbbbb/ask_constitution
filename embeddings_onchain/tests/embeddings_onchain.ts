@@ -129,15 +129,29 @@ describe("embeddings_onchain", () => {
 
     console.log("Transaction ID for search:", tx);
 
-    // FIX: Use getParsedTransaction instead of getTransaction
+    // --- Start of enhanced logging for log retrieval ---
+    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for 500ms
+
     const transaction = await provider.connection.getParsedTransaction(tx, { commitment: 'confirmed' });
-    const logs = transaction?.meta?.logMessages;
+
+    if (!transaction) {
+      console.error(`ERROR: getParsedTransaction returned null for transaction ID: ${tx}. Transaction might not be confirmed or found.`);
+      assert.fail(`Transaction ${tx} not found or confirmed.`);
+    }
+
+    if (transaction.meta?.err) {
+      console.error(`ERROR: Transaction failed with error:`, transaction.meta.err);
+      console.error(`Full transaction meta:`, JSON.stringify(transaction.meta, null, 2));
+      assert.fail(`Transaction ${tx} failed with error: ${JSON.stringify(transaction.meta.err)}`);
+    }
+
+    const logs = transaction.meta?.logMessages;
 
     let foundBestMatchUri: string | null = null;
     let foundBestSimilarity: number | null = null;
 
     if (logs) {
-      console.log("got logs: ", logs)
+      console.log("SUCCESS: Received logs for transaction:", logs); // Log all received logs
       for (const log of logs) {
         if (log.includes("Best match found:")) {
           const uriMatch = log.match(/URI = ([^,]+)/);
@@ -150,8 +164,11 @@ describe("embeddings_onchain", () => {
           break;
         }
       }
+    } else {
+      console.warn(`WARN: No log messages found in transaction meta for ${tx}.`);
+      console.warn(`Transaction meta (if available):`, JSON.stringify(transaction.meta, null, 2));
     }
-
+    // --- End of enhanced logging for log retrieval ---
     console.log("Found best match URI from logs:", foundBestMatchUri);
     console.log("Found best similarity from logs:", foundBestSimilarity);
 
@@ -177,8 +194,11 @@ describe("embeddings_onchain", () => {
       )
       .rpc();
 
-    const newTransaction = await provider.connection.getTransaction(newTx, { commitment: 'confirmed' });
-    const newLogs = newTransaction?.meta?.logMessages;
+    // FIX: Use getParsedTransaction instead of getTransaction
+    await new Promise(resolve => setTimeout(resolve, 500)); // Wait for 500ms
+    
+    const transaction2 = await provider.connection.getParsedTransaction(newTx, { commitment: 'confirmed' });
+    const newLogs = transaction2?.meta?.logMessages;
 
     let newFoundBestMatchUri: string | null = null;
     let newFoundBestSimilarity: number | null = null;
