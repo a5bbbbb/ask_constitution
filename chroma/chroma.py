@@ -110,7 +110,7 @@ class BlockchainEmbeddingClient:
             
             # Query blockchain API
             payload = {
-                "embeddings": [query_embedding]
+                "embeddings": query_embedding
             }
             
             response = requests.get(self.embeddings_endpoint, json=payload)
