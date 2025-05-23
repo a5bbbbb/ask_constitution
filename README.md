@@ -137,31 +137,6 @@ If you wish to fine-tune the LLM on legal Q\&A data, follow these steps:
 
 ---
 
-## API Reference
-
-| Endpoint       | Method | Description                    |
-| -------------- | ------ | ------------------------------ |
-| `/query`       | POST   | Submit a constitutional query. |
-| `/healthcheck` | GET    | Service status check.          |
-
-**POST /query**
-
-* **Request Body**:
-
-  ```json
-  { "question": "What rights does Article 34 guarantee?" }
-  ```
-* **Response**:
-
-  ```json
-  {
-    "answer": "Article 34 guarantees the right to freedom of religion and worship, subject to laws of public order. [Art. 34]",
-    "citations": ["Article 34"]
-  }
-  ```
-
----
-
 ## Contributing
 
 We welcome contributions! Please:
@@ -185,7 +160,6 @@ This project is released under the [MIT License](LICENSE).
 ## Acknowledgements
 
 * SentenceTransformers team
-* OpenAI for LLM access
 * The Government of the Republic of Kazakhstan for constitutional texts
 
 ---
