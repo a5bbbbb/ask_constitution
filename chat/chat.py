@@ -1,9 +1,8 @@
 import streamlit as st
 from dataclasses import dataclass
-from pipeline import rag_pipeline
 import uuid
 from common.models import Message
-from chroma.chroma import store_chat_message, load_chat_history, store_chat_session, get_all_chat_sessions
+from chroma.chroma import store_chat_message, load_chat_history, store_chat_session, get_all_chat_sessions, rag_pipeline
 
 USER = "user"
 ASSISTANT = "ai"

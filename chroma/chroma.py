@@ -229,7 +229,7 @@ def initialize_blockchain_collection(force_reload=False):
             blockchain_client.documents_store.clear()
             blockchain_client.metadata_store.clear()
         
-        add_documents_to_blockchain(documents, ids, metadatas)
+            add_documents_to_blockchain(documents, ids, metadatas)
         print(f"Added {len(documents)} documents to blockchain and local storage.")
         
     except Exception as e:
@@ -321,6 +321,86 @@ initialize_blockchain_collection()
 print("Blockchain client ready!")
 
 
+from langchain_ollama import OllamaEmbeddings, OllamaLLM
+
+# llm_model = "llama2"
+llm_model = "llama3.2"
+
+
+def query_ollama(prompt):
+    """
+    Send a query to Ollama and retrieve the response.
+    
+    Args:
+        prompt (str): The input prompt for Ollama.
+    
+    Returns:
+        str: The response from Ollama.
+    """
+    # llm = OllamaLLM(model=llm_model, base_url="http://172.17.0.2:11434")
+    llm = OllamaLLM(model=llm_model, base_url="http://host.docker.internal:11434")
+    # llm = OllamaLLM(model=llm_model, base_url="http://quizzical_grothendieck:11434")
+    return llm.invoke(prompt)
+
+
+def rag_pipeline(query_text, chat_history=None):
+    """
+    Perform Retrieval-Augmented Generation (RAG) by combining ChromaDB, chat history, and Ollama.
+    
+    Args:
+        query_text (str): The input query.
+        chat_history (list, optional): List of previous Message objects from the conversation.
+    
+    Returns:
+        str: The generated response from Ollama augmented with retrieved context.
+    """
+    try:
+        print("Query: " + query_text)
+        
+        # Retrieve documents (assuming query_constitution_documents returns a list of dictionaries)
+        retrieved_docs = query_constitution_documents(query_text, n_results=5)
+
+        # Extract the 'document' field from each dictionary in retrieved_docs
+        if retrieved_docs:
+            constitution_context = " ".join([doc['document'] for doc in retrieved_docs]) if retrieved_docs else "No relevant documents found."
+        else:
+            constitution_context = "No relevant documents found."
+
+        print("Constitution Context: " + constitution_context[:200] + "..." if len(constitution_context) > 200 else constitution_context)
+        
+        chat_context = ""
+        if chat_history and len(chat_history) > 0:
+            recent_messages = chat_history[-10:] if len(chat_history) > 10 else chat_history
+            
+            chat_context = "\nPrevious conversation:\n"
+            for msg in recent_messages:
+                prefix = "Human: " if msg.actor == "user" else "AI: "
+                chat_context += f"{prefix}{msg.payload}\n"
+                
+            print("Chat Context: " + chat_context[:200] + "..." if len(chat_context) > 200 else chat_context)
+        
+        augmented_prompt = f"""
+Constitution Context: {constitution_context}
+{chat_context}
+
+Current Question: {query_text}
+
+Answer the current question based primarily on the Constitution Context above.
+Maintain a consistent and helpful tone, taking into account the previous conversation if relevant.
+If the Constitution Context doesn't provide enough information to answer fully, 
+make that clear but still give the best possible answer based on available information.
+"""
+        
+        print("######## Augmented Prompt ########")
+        print(augmented_prompt)
+        
+        response = query_ollama(augmented_prompt)
+        return response
+    except Exception as e:
+        print(f"Error in RAG pipeline: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"I'm sorry, there was an error processing your query: {str(e)}"
 
 
 

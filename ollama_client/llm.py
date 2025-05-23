@@ -15,6 +15,6 @@ def query_ollama(prompt):
         str: The response from Ollama.
     """
     # llm = OllamaLLM(model=llm_model, base_url="http://172.17.0.2:11434")
-    llm = OllamaLLM(model=llm_model, base_url="http://host.docker.internal:11434")
+    llm = OllamaLLM(model=llm_model, base_url="http://localhost:11434")
     # llm = OllamaLLM(model=llm_model, base_url="http://quizzical_grothendieck:11434")
     return llm.invoke(prompt)

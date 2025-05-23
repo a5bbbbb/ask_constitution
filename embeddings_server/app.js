@@ -10,7 +10,7 @@ const {
 const fs = require('fs');
 
 const app = express();
-const connection = new Connection("http://host.docker.internal:8899");
+const connection = new Connection("http://172.24.166.141:8899");
 const wallet = new anchor.Wallet(new Keypair());
 
 const provider = new anchor.AnchorProvider(connection, wallet, {
@@ -32,16 +32,18 @@ async function saveEmbeddings() {
 
 function loadEmbeddings() {
   createdEmbeddings = JSON.parse(fs.readFileSync('./createdEmbeddings.json', 'utf-8'));
-  console.log('Loaded from createdEmbeddings.json:', createdEmbeddings);
+  //console.log('Loaded from createdEmbeddings.json:', createdEmbeddings);
 }
 
 async function main() {
   const LAMPORTS_PER_SOL = 1000000000;
+  console.log("Going to request airdrop")
   await airdropIfRequired(
     connection, 
     wallet.publicKey, 
   0.5 * LAMPORTS_PER_SOL,
   1 * LAMPORTS_PER_SOL,);
+  console.log("Airdrop successful")
 
   console.log(wallet.publicKey);
 
@@ -90,13 +92,14 @@ async function postEmbeddingsHandler(req, res) {
 
 async function queryEmbeddingsHandler(req, res) {
   try {
-    const embeddingInput = JSON.parse(req.query.embeddings);
+    console.log(req.body);
+    const embeddingInput = req.body.embeddings;
     if (!Array.isArray(embeddingInput) || !embeddingInput.every(n => typeof n === 'number')) {
-      console.log(req.query)
+      console.log(req.body)
       res.status(400).json({ error: "Missing or invalid 'embedding' array in request query" });
       return;
     }
-    const embedding = numberArrayToFloat32Array(embeddingInput);
+    const embedding = embeddingInput.length > 32 ? embeddingInput.slice(0,32) : embeddingInput;
     const result = await queryOnchain(embedding);
     res.json({
       "ids": [result ? parseInt(result): 1] // default value in case of null
@@ -107,30 +110,34 @@ async function queryEmbeddingsHandler(req, res) {
   }
 }
 
-function numberArrayToFloat32Array(arr) {
-  return new Float32Array(arr);
-}
-
 async function queryOnchain(embeddings) {
-  console.log("query received: ", embeddings)
+  console.log("query received: ", embeddings);
   if (createdEmbeddings.length === 0) {
     throw new Error("No embeddings available for query.");
   }
+
   const queryEmbedding = embeddings;
-  const accountsToSearch = createdEmbeddings.map(e => e.pda);
+  const accountsToSearch = createdEmbeddings.map(e => e.pda).slice(0, 8);
+  
+  // Check the size of the query embedding
+  const querySize = Buffer.byteLength(JSON.stringify(queryEmbedding), 'utf8');
+  console.log("Size of queryEmbedding:", querySize);
+  
+  // Optionally limit the number of accounts if too many
+  const maxAccounts = 32;
+  const accountsToSearchLimited = accountsToSearch.slice(0, maxAccounts);
 
   console.log("Querying on-chain with provided embedding");
-  console.log("Accounts to search:", accountsToSearch.map(pk => pk.toBase58()));
 
   const tx = await program.methods
-    .findSimilarEmbedding(Array.from(queryEmbedding))
+    .findSimilarEmbedding(queryEmbedding)
     .accounts({
       signer: provider.wallet.publicKey,
       systemProgram: SystemProgram.programId,
     })
     .remainingAccounts(
-      accountsToSearch.map(pubkey => ({
-        pubkey,
+      accountsToSearchLimited.map(pubkey => ({
+        pubkey: new PublicKey(pubkey),
         isWritable: false,
         isSigner: false,
       }))
@@ -254,7 +261,6 @@ async function addOnchain(embeddings, ids) {
     }
   }
   saveEmbeddings()
-  console.log("Saved embed accounts: ", createdEmbeddings)
   return results;
 }
 
