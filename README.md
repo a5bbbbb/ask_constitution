@@ -40,7 +40,6 @@ Follow these instructions to set up a local development environment and run ReZa
 * Python 3.9+
 * Git
 * [Poetry](https://python-poetry.org/) or pip
-* API key for your chosen LLM provider (e.g., OpenAI, Anthropic)
 
 ---
 
@@ -56,8 +55,6 @@ Follow these instructions to set up a local development environment and run ReZa
 2. **Install dependencies**
 
    ```bash
-   # Using Poetry
-   poetry install
 
    # Or using pip
    pip install -r requirements.txt
