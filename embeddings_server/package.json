@@ -1,0 +1,24 @@
+{
+  "name": "embeddings_server",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "embeddings_server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node embeddings_server.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@noble/hashes": "^1.8.0",
+    "@solana-developers/helpers": "^2.8.1",
+    "@solana/web3.js": "^1.98.2",
+    "express": "^5.1.0"
+  }
+}

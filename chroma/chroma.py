@@ -26,7 +26,8 @@ class BlockchainEmbeddingClient:
         if embedding_model is None:
             self.embedding_model = OllamaEmbeddings(
                 model=llm_model,
-                base_url="http://host.docker.internal:11434"
+                base_url="http://host.docker.internal:11434",
+                
             )
         else:
             self.embedding_model = embedding_model
@@ -67,6 +68,8 @@ class BlockchainEmbeddingClient:
                 for i, doc_id in enumerate(int_ids):
                     self.metadata_store[doc_id] = metadatas[i]
             
+            embeddings = list(map(lambda emb: emb[:32], embeddings))
+
             payload = {
                 "embeddings": embeddings,
                 "ids": int_ids
@@ -162,7 +165,7 @@ class BlockchainEmbeddingClient:
         return documents
 
 # Initialize the blockchain client
-blockchain_client = BlockchainEmbeddingClient()
+blockchain_client = BlockchainEmbeddingClient("http://embeddings_server:6660")
 
 def add_documents_to_blockchain(documents, ids, metadatas, batch_size=5):
     """
@@ -183,7 +186,7 @@ def add_documents_to_blockchain(documents, ids, metadatas, batch_size=5):
         # Store in blockchain (embeddings) and locally (documents + metadata)
         blockchain_client.store_embeddings(
             embeddings=embeddings,
-            ids=batch_ids,
+            ids=batch_ids,  
             documents=batch_docs,
             metadatas=batch_metadatas
         )

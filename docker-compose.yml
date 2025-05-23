@@ -20,15 +20,48 @@ services:
     build:
       context: .
       dockerfile: ./chroma/dockerfile
+    develop: 
+      watch:
+        - action: sync+restart
+          path: ./chroma/chroma.py
+          target: /app/chroma/chroma.py
+        - action: sync+restart
+          path: ./chroma/__init__.py
+          target: /app/chroma/__init__.py
     networks:
       - net
     depends_on:
       chroma:
         condition: service_healthy
+
+  embeddings_server:
+    build:
+      context: ./embeddings_server
+      dockerfile: ./dockerfile
+    develop: 
+      watch:
+        - action: sync+restart
+          path: ./embeddings_server/app.js
+          target: /home/node/app/app.js
+    networks:
+      - net
+    ports:
+      - 6660:6660
+    volumes:
+      - ./embeddings_server/createdEmbeddings.json:/home/node/app/createdEmbeddings.json
+    extra_hosts:
+      - "host.docker.internal:172.24.166.141" #domainname/ip of machine running the solana validator
+    attach: false
+
   chat:
     build:
       context: .
       dockerfile: ./chat/dockerfile
+    develop: 
+      watch:
+        - action: sync+restart
+          path: ./chat/chat.py
+          target: /app/chat/chat.py
     ports:
       - 8501:8501
     networks:
@@ -37,6 +70,9 @@ services:
       - chroma_client
     environment:
       - PYTHONUNBUFFERED=1
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
+  
 
 volumes:
   index_data:

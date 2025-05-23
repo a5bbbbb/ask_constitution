@@ -1,0 +1,213 @@
+{
+  "address": "A1g3ToDasaBD2Xc11rhALercNtNeaWmTS1VxCqhQ6Daa",
+  "metadata": {
+    "name": "embeddings_onchain",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "find_similar_embedding",
+      "discriminator": [
+        26,
+        90,
+        42,
+        169,
+        73,
+        122,
+        178,
+        17
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "query_embedding",
+          "type": {
+            "array": [
+              "f32",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize_embedding",
+      "discriminator": [
+        13,
+        117,
+        16,
+        41,
+        80,
+        191,
+        32,
+        165
+      ],
+      "accounts": [
+        {
+          "name": "embedding_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  109,
+                  98,
+                  101,
+                  100,
+                  100,
+                  105,
+                  110,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "seed_data"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_seed_data",
+          "type": "bytes"
+        },
+        {
+          "name": "embedding_data",
+          "type": {
+            "array": [
+              "f32",
+              32
+            ]
+          }
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "update_embedding",
+      "discriminator": [
+        25,
+        64,
+        122,
+        125,
+        195,
+        211,
+        216,
+        22
+      ],
+      "accounts": [
+        {
+          "name": "embedding_account",
+          "writable": true
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "embedding_data",
+          "type": {
+            "array": [
+              "f32",
+              32
+            ]
+          }
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Embedding",
+      "discriminator": [
+        89,
+        247,
+        1,
+        34,
+        4,
+        32,
+        242,
+        253
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UriTooLong",
+      "msg": "Provided URI is too long."
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: Only the account owner can perform this action."
+    },
+    {
+      "code": 6002,
+      "name": "ZeroMagnitudeVector",
+      "msg": "Vector has zero magnitude, cannot calculate cosine similarity."
+    }
+  ],
+  "types": [
+    {
+      "name": "Embedding",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "embedding",
+            "type": {
+              "array": [
+                "f32",
+                32
+              ]
+            }
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          }
+        ]
+      }
+    }
+  ]
+}
